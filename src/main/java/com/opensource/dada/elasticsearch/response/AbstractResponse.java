@@ -11,7 +11,7 @@ public abstract class AbstractResponse implements BaseResponse {
 
 	private int responseCode;
 	private String error;
-	private String responseString;
+	private String responseJson;
 	
 	/**
 	 * 
@@ -50,18 +50,18 @@ public abstract class AbstractResponse implements BaseResponse {
 	}
 
 	/**
-	 * @return the responseString
+	 * @return the responseJson
 	 */
 	@Override
-	public final String getResponseString() {
-		return responseString;
+	public final String getResponseJson() {
+		return responseJson;
 	}
 
 	/**
-	 * @param responseString the responseString to set
+	 * @param responseJson the responseJson to set
 	 */
-	public final void setResponseString(String responseString) {
-		this.responseString = responseString;
+	public final void setResponseJson(String responseJson) {
+		this.responseJson = responseJson;
 	}
 
 	public final boolean isRequestSuccessful() {
@@ -77,7 +77,7 @@ public abstract class AbstractResponse implements BaseResponse {
 		int result = 1;
 		result = prime * result + ((error == null) ? 0 : error.hashCode());
 		result = prime * result + responseCode;
-		result = prime * result + ((responseString == null) ? 0 : responseString.hashCode());
+		result = prime * result + ((responseJson == null) ? 0 : responseJson.hashCode());
 		return result;
 	}
 
@@ -100,10 +100,10 @@ public abstract class AbstractResponse implements BaseResponse {
 			return false;
 		if (responseCode != other.responseCode)
 			return false;
-		if (responseString == null) {
-			if (other.responseString != null)
+		if (responseJson == null) {
+			if (other.responseJson != null)
 				return false;
-		} else if (!responseString.equals(other.responseString))
+		} else if (!responseJson.equals(other.responseJson))
 			return false;
 		return true;
 	}
@@ -113,8 +113,8 @@ public abstract class AbstractResponse implements BaseResponse {
 	 */
 	@Override
 	public String toString() {
-		return this.getClass().getSimpleName()+" [responseCode=" + responseCode + ", error=" + error + ", responseString="
-				+ responseString + "]";
+		return this.getClass().getSimpleName()+" [responseCode=" + responseCode + ", error=" + error + ", responseJson="
+				+ responseJson + "]";
 	}
 	
 }

@@ -4,7 +4,10 @@
 package com.opensource.dada.elasticsearch.request;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -12,9 +15,9 @@ import java.util.Set;
  *
  */
 public abstract class AbstractRequest implements BaseRequest {
-	protected Set<String> indices = new LinkedHashSet<String>();
-	protected Set<String> types = new LinkedHashSet<String>();
-	protected Object requestPayload;
+	private Object requestPayload;
+	private Set<String> cleanApiParameters = new LinkedHashSet<>();
+	private Map<String,Object> parameters = new LinkedHashMap<>();
 
 	/**
 	 * 
@@ -22,38 +25,26 @@ public abstract class AbstractRequest implements BaseRequest {
 	public AbstractRequest() {
 	}
 
-	public final boolean addIndex(String indexName) {
-		return this.indices.add(indexName);
-	}
+	public abstract String getIndex();
 
-	public final boolean addIndices(Collection<? extends String> indexNames) {
-		return this.indices.addAll(indexNames);
-	}
+	public abstract String getType();
 
-	public final String getJoinedIndices() {
-		if (indices.size() > 0) {
-			return String.join(",", indices);
-		}
-		
-		return "_all";
-	}
+	public boolean addCleanApiParameter(String param) {
+        return this.cleanApiParameters.add(param);
+    }
+	
+	public boolean removeCleanApiParameter(String param) {
+        return this.cleanApiParameters.remove(param);
+    }
 
-	public final boolean addType(String typeName) {
-		return this.types.add(typeName);
-	}
-
-	public final boolean addTypes(Collection<? extends String> typeNames) {
-		return this.types.addAll(typeNames);
-	}
-
-	public final String getJoinedTypes() {
-		if (types.size() > 0) {
-			return String.join(",", types);
-		}
-
-		return null;
-	}
-
+    public void setParameter(String paramKey, Object paramValue) {
+    	this.parameters.put(paramKey, paramValue);
+    }
+    
+    public void removeParameter(String paramKey) {
+    	this.parameters.remove(paramKey);
+    }
+    
 	protected String getMiddleURI() {
 		return null;
 	}
@@ -63,33 +54,57 @@ public abstract class AbstractRequest implements BaseRequest {
 	}
 
 	@Override
-	public final String getRequestURI() {
+	public String getRequestURI() {
 		StringBuilder sb = new StringBuilder();
-		String indexName = getJoinedIndices();
+		
+		String indexName = getIndex();
 		if (indexName != null && !indexName.isEmpty()) {
 			sb.append(indexName);
-
-			String middleURI = getMiddleURI();
-
-			if (middleURI != null && !middleURI.isEmpty()) {
-				sb.append("/").append(middleURI);
-			}
-
-			String typeName = getJoinedTypes();
-			if (typeName != null && !typeName.isEmpty()) {
-				sb.append("/").append(typeName);
-			}
-
-			String relativeURI = getRelativeURI();
-
-			if (relativeURI != null && !relativeURI.isEmpty()) {
-				sb.append("/").append(relativeURI);
-			}
+		}
+		
+		String middleURI = getMiddleURI();
+		if (middleURI != null && !middleURI.isEmpty()) {
+			sb.append("/").append(middleURI);
 		}
 
+		String typeName = getType();
+		if (typeName != null && !typeName.isEmpty()) {
+			sb.append("/").append(typeName);
+		}
+
+		String relativeURI = getRelativeURI();
+		if (relativeURI != null && !relativeURI.isEmpty()) {
+			sb.append("/").append(relativeURI);
+		}
+
+		if (!parameters.isEmpty() || !cleanApiParameters.isEmpty()) {
+			sb.append(buildQueryString());
+        }
+		
 		return sb.toString();
 	}
 
+	protected String buildQueryString() {
+        StringBuilder queryString = new StringBuilder();
+
+        if (!cleanApiParameters.isEmpty()) {
+            queryString.append("/").append(String.join(",",cleanApiParameters));
+        }
+
+        queryString.append("?");
+        for (Entry<String, Object> entry : parameters.entrySet()) {
+            queryString.append(entry.getKey())
+                    .append("=")
+                    .append(entry.getValue().toString())
+                    .append("&");
+        }
+        // if there are any params  ->  deletes the final ampersand
+        // if no params             ->  deletes the question mark
+        queryString.deleteCharAt(queryString.length() - 1);
+
+        return queryString.toString();
+    }
+	
 	public Object getRequestPayload() {
 		return requestPayload;
 	}
@@ -97,5 +112,5 @@ public abstract class AbstractRequest implements BaseRequest {
 	public void setRequestPayload(Object requestPayload) {
 		this.requestPayload = requestPayload;
 	}
-	
+
 }

@@ -7,7 +7,7 @@ package com.opensource.dada.elasticsearch.request;
  * @author dadasaheb patil
  *
  */
-public class DeleteByQueryRequest extends AbstractRequest {
+public class DeleteByQueryRequest extends AbstractIndexRequest {
 
 	/**
 	 * 

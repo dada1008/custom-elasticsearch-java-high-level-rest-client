@@ -20,7 +20,9 @@ import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 
 import com.opensource.dada.elasticsearch.request.DeleteByQueryRequest;
+import com.opensource.dada.elasticsearch.request.GetAliasesRequest;
 import com.opensource.dada.elasticsearch.response.DeleteByQueryResponse;
+import com.opensource.dada.elasticsearch.response.GetAliasesResponse;
 
 /**
  * @author dadasaheb patil
@@ -51,10 +53,35 @@ public class CustomRestHighLevelClientTests {
 		MatchAllQueryBuilder matchAll = new MatchAllQueryBuilder();
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder().query(matchAll);
 		dbqRequest.setRequestPayload(searchSourceBuilder);
-		DeleteByQueryResponse response = client.deleteByQuery(dbqRequest);
+		DeleteByQueryResponse response = null;
+		try {
+			response = client.deleteByQuery(dbqRequest);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		System.out.println("DeleteByQueryResponse: "+response);
 		assertNotNull(response);
 		assertEquals(200, response.getResponseCode(),"Delete by query request failed");
-		System.out.println("DeleteByQueryResponse: "+response);
+		assertNotNull(response.getResponseJson());
+	}
+	
+	@Test
+	public void testGetAliases() {
+		GetAliasesRequest gaRequest = new GetAliasesRequest();
+		
+		String aliasName = "alias-2";
+		gaRequest.addAlias(aliasName);
+		
+		GetAliasesResponse response = null;
+		try {
+			response = client.getAliases(gaRequest);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		System.out.println("GetAliasesResponse: "+response);
+		assertNotNull(response);
+		assertEquals(200, response.getResponseCode(),"Get aliases request failed");
+		assertNotNull(response.getResponseJson());
 	}
 	
 	@AfterAll

@@ -10,5 +10,5 @@ package com.opensource.dada.elasticsearch.response;
 public interface BaseResponse {
 	int getResponseCode();
 	String getError();
-	String getResponseString();
+	String getResponseJson();
 }

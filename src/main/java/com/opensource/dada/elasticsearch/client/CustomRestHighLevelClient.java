@@ -4,7 +4,6 @@
 package com.opensource.dada.elasticsearch.client;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,21 +14,22 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.client.Response;
-import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.CheckedConsumer;
-import org.elasticsearch.common.xcontent.XContentHelper;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry.Entry;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.opensource.dada.elasticsearch.request.DeleteByQueryRequest;
+import com.opensource.dada.elasticsearch.request.GetAliasesRequest;
 import com.opensource.dada.elasticsearch.response.AbstractResponse;
 import com.opensource.dada.elasticsearch.response.DeleteByQueryResponse;
+import com.opensource.dada.elasticsearch.response.GetAliasesResponse;
+import com.opensource.dada.elasticsearch.response.GetAliasesResponseParser;
 
 /**
  * @author dadasaheb patil
@@ -42,6 +42,9 @@ public class CustomRestHighLevelClient extends RestHighLevelClient {
 		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		objectMapper.setSerializationInclusion(Include.NON_NULL);
 		objectMapper.setSerializationInclusion(Include.NON_EMPTY);
+		SimpleModule module = new SimpleModule();
+		module.addDeserializer(GetAliasesResponse.class, new GetAliasesResponseParser());
+		objectMapper.registerModule(module);
 	}
 	/**
 	 * @param restClientBuilder
@@ -71,31 +74,31 @@ public class CustomRestHighLevelClient extends RestHighLevelClient {
 		// TODO Auto-generated constructor stub
 	}
 	
-	public DeleteByQueryResponse deleteByQuery(DeleteByQueryRequest dbqRequest) {
+	public DeleteByQueryResponse deleteByQuery(DeleteByQueryRequest dbqRequest) throws IOException {
 		DeleteByQueryResponse responseObject = new DeleteByQueryResponse();
 		
-		String payload = null;
+		HttpEntity entity = null;
 		Object payloadObject = dbqRequest.getRequestPayload();
 		if(payloadObject!=null) {
-			payload = payloadObject.toString();
+			String payload = payloadObject.toString();
+			entity = new StringEntity(payload, ContentType.APPLICATION_JSON);
 		}
 		
-		HttpEntity entity = new StringEntity(payload, ContentType.APPLICATION_JSON);
 		Response response = null;
 		
-		try {
+		//try {
 			Map<String,String> params = new HashMap<>();
 			response = this.getLowLevelClient().performRequest(dbqRequest.getRequestMethod(), dbqRequest.getRequestURI(), params,entity);
 			String responseString = EntityUtils.toString(response.getEntity());
 			if(responseString!=null) {
 				//Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), responseString, true);
 				responseObject = objectMapper.readValue(responseString, DeleteByQueryResponse.class);
-				responseObject.setResponseString(responseString);
+				responseObject.setResponseJson(responseString);
 			}
 			
 			updateResponse(response, responseObject);
 			
-		} catch (ResponseException e) {
+		/*} catch (ResponseException e) {
 			e.printStackTrace();
 			response = e.getResponse();
 			if(response!=null) {
@@ -110,7 +113,7 @@ public class CustomRestHighLevelClient extends RestHighLevelClient {
 			} else {
 				responseObject.setError(e.getMessage());
 			}
-		}
+		}*/
 		
 		return responseObject;
 	}
@@ -124,4 +127,31 @@ public class CustomRestHighLevelClient extends RestHighLevelClient {
 			responseObject.setError(error);
 		}
 	}
+	
+	public GetAliasesResponse getAliases(GetAliasesRequest gaRequest) throws IOException {
+		GetAliasesResponse responseObject = new GetAliasesResponse();
+
+		HttpEntity entity = null;
+		Object payloadObject = gaRequest.getRequestPayload();
+		if (payloadObject != null) {
+			String payload = payloadObject.toString();
+			entity = new StringEntity(payload, ContentType.APPLICATION_JSON);
+		}
+
+		Response response = null;
+
+		Map<String, String> params = new HashMap<>();
+		response = this.getLowLevelClient().performRequest(gaRequest.getRequestMethod(), gaRequest.getRequestURI(),
+				params, entity);
+		String responseString = EntityUtils.toString(response.getEntity());
+		if (responseString != null) {
+			responseObject = objectMapper.readValue(responseString, GetAliasesResponse.class);
+			responseObject.setResponseJson(responseString);
+		}
+
+		updateResponse(response, responseObject);
+
+		return responseObject;
+	}
+	
 }

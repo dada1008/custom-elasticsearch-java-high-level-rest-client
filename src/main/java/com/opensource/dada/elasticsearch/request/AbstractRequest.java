@@ -12,9 +12,9 @@ import java.util.Set;
  *
  */
 public abstract class AbstractRequest implements BaseRequest {
-	protected Set<String> indices = new LinkedHashSet<String>();
-	protected Set<String> types = new LinkedHashSet<String>();
-	protected Object requestPayload;
+	private Set<String> indices = new LinkedHashSet<String>();
+	private Set<String> types = new LinkedHashSet<String>();
+	private Object requestPayload;
 
 	/**
 	 * 
@@ -34,7 +34,7 @@ public abstract class AbstractRequest implements BaseRequest {
 		if (indices.size() > 0) {
 			return String.join(",", indices);
 		}
-		
+
 		return "_all";
 	}
 
@@ -63,28 +63,27 @@ public abstract class AbstractRequest implements BaseRequest {
 	}
 
 	@Override
-	public final String getRequestURI() {
+	public String getRequestURI() {
 		StringBuilder sb = new StringBuilder();
+		
 		String indexName = getJoinedIndices();
 		if (indexName != null && !indexName.isEmpty()) {
 			sb.append(indexName);
+		}
+		
+		String middleURI = getMiddleURI();
+		if (middleURI != null && !middleURI.isEmpty()) {
+			sb.append("/").append(middleURI);
+		}
 
-			String middleURI = getMiddleURI();
+		String typeName = getJoinedTypes();
+		if (typeName != null && !typeName.isEmpty()) {
+			sb.append("/").append(typeName);
+		}
 
-			if (middleURI != null && !middleURI.isEmpty()) {
-				sb.append("/").append(middleURI);
-			}
-
-			String typeName = getJoinedTypes();
-			if (typeName != null && !typeName.isEmpty()) {
-				sb.append("/").append(typeName);
-			}
-
-			String relativeURI = getRelativeURI();
-
-			if (relativeURI != null && !relativeURI.isEmpty()) {
-				sb.append("/").append(relativeURI);
-			}
+		String relativeURI = getRelativeURI();
+		if (relativeURI != null && !relativeURI.isEmpty()) {
+			sb.append("/").append(relativeURI);
 		}
 
 		return sb.toString();
@@ -97,5 +96,5 @@ public abstract class AbstractRequest implements BaseRequest {
 	public void setRequestPayload(Object requestPayload) {
 		this.requestPayload = requestPayload;
 	}
-	
+
 }

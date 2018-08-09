@@ -15,8 +15,8 @@ import java.util.Set;
  */
 public abstract class AbstractRequest implements BaseRequest {
 	private Object requestPayload;
-	private Set<String> cleanApiParameters = new LinkedHashSet<>();
-	private Map<String,Object> parameters = new LinkedHashMap<>();
+	protected Set<String> cleanApiParameters = new LinkedHashSet<>();
+	protected Map<String,Object> parameters = new LinkedHashMap<>();
 	/**
 	 * 
 	 */

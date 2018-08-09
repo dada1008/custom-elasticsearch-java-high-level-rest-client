@@ -14,6 +14,7 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.client.Response;
+import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -24,10 +25,13 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.opensource.dada.elasticsearch.request.ClusterHealthRequest;
 import com.opensource.dada.elasticsearch.request.DeleteByQueryRequest;
 import com.opensource.dada.elasticsearch.request.GetAliasesRequest;
 import com.opensource.dada.elasticsearch.request.GetNodesInfoRequest;
 import com.opensource.dada.elasticsearch.response.AbstractResponse;
+import com.opensource.dada.elasticsearch.response.ClusterHealthResponse;
+import com.opensource.dada.elasticsearch.response.ClusterHealthResponseParser;
 import com.opensource.dada.elasticsearch.response.DeleteByQueryResponse;
 import com.opensource.dada.elasticsearch.response.GetAliasesResponse;
 import com.opensource.dada.elasticsearch.response.GetAliasesResponseParser;
@@ -48,8 +52,10 @@ public class CustomRestHighLevelClient extends RestHighLevelClient {
 		SimpleModule module = new SimpleModule();
 		module.addDeserializer(GetAliasesResponse.class, new GetAliasesResponseParser());
 		module.addDeserializer(GetNodesInfoResponse.class, new GetNodesInfoResponseParser());
+		module.addDeserializer(ClusterHealthResponse.class, new ClusterHealthResponseParser());
 		objectMapper.registerModule(module);
 	}
+
 	/**
 	 * @param restClientBuilder
 	 */
@@ -77,48 +83,43 @@ public class CustomRestHighLevelClient extends RestHighLevelClient {
 		super(restClient, doClose, namedXContentEntries);
 		// TODO Auto-generated constructor stub
 	}
-	
+
 	public DeleteByQueryResponse deleteByQuery(DeleteByQueryRequest dbqRequest) throws IOException {
 		DeleteByQueryResponse responseObject = new DeleteByQueryResponse();
-		
+
 		HttpEntity entity = null;
 		Object payloadObject = dbqRequest.getRequestPayload();
-		if(payloadObject!=null) {
+		if (payloadObject != null) {
 			String payload = payloadObject.toString();
 			entity = new StringEntity(payload, ContentType.APPLICATION_JSON);
 		}
-		
+
 		Response response = null;
-		
-		//try {
-			Map<String,String> params = new HashMap<>();
-			response = this.getLowLevelClient().performRequest(dbqRequest.getRequestMethod(), dbqRequest.getRequestURI(), params,entity);
-			String responseString = EntityUtils.toString(response.getEntity());
-			if(responseString!=null) {
-				//Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), responseString, true);
-				responseObject = objectMapper.readValue(responseString, DeleteByQueryResponse.class);
-				responseObject.setResponseJson(responseString);
-			}
-			
-			updateResponse(response, responseObject);
-			
-		/*} catch (ResponseException e) {
-			e.printStackTrace();
-			response = e.getResponse();
-			if(response!=null) {
-				updateResponse(response, responseObject);
-			} else {
-				responseObject.setError(e.getMessage());
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-			if(response!=null) {
-				updateResponse(response, responseObject);
-			} else {
-				responseObject.setError(e.getMessage());
-			}
-		}*/
-		
+
+		// try {
+		Map<String, String> params = new HashMap<>();
+		response = this.getLowLevelClient().performRequest(dbqRequest.getRequestMethod(), dbqRequest.getRequestURI(),
+				params, entity);
+		String responseString = EntityUtils.toString(response.getEntity());
+		if (responseString != null) {
+			// Map<String, Object> map =
+			// XContentHelper.convertToMap(XContentType.JSON.xContent(), responseString,
+			// true);
+			responseObject = objectMapper.readValue(responseString, DeleteByQueryResponse.class);
+			responseObject.setResponseJson(responseString);
+		}
+
+		updateResponse(response, responseObject);
+
+		/*
+		 * } catch (ResponseException e) { e.printStackTrace(); response =
+		 * e.getResponse(); if(response!=null) { updateResponse(response,
+		 * responseObject); } else { responseObject.setError(e.getMessage()); } } catch
+		 * (IOException e) { e.printStackTrace(); if(response!=null) {
+		 * updateResponse(response, responseObject); } else {
+		 * responseObject.setError(e.getMessage()); } }
+		 */
+
 		return responseObject;
 	}
 
@@ -127,11 +128,11 @@ public class CustomRestHighLevelClient extends RestHighLevelClient {
 		int responseCode = statusLine.getStatusCode();
 		String error = statusLine.getReasonPhrase();
 		responseObject.setResponseCode(responseCode);
-		if(!responseObject.isRequestSuccessful()) {
+		if (!responseObject.isRequestSuccessful()) {
 			responseObject.setError(error);
 		}
 	}
-	
+
 	public GetAliasesResponse getAliases(GetAliasesRequest gaRequest) throws IOException {
 		GetAliasesResponse responseObject = new GetAliasesResponse();
 
@@ -157,7 +158,7 @@ public class CustomRestHighLevelClient extends RestHighLevelClient {
 
 		return responseObject;
 	}
-	
+
 	public GetNodesInfoResponse getNodesInfos(GetNodesInfoRequest gniRequest) throws IOException {
 		GetNodesInfoResponse responseObject = new GetNodesInfoResponse();
 
@@ -183,5 +184,40 @@ public class CustomRestHighLevelClient extends RestHighLevelClient {
 
 		return responseObject;
 	}
-	
+
+	public ClusterHealthResponse getClusterHealth(ClusterHealthRequest chRequest) throws IOException {
+		ClusterHealthResponse responseObject = new ClusterHealthResponse();
+
+		HttpEntity entity = null;
+		Object payloadObject = chRequest.getRequestPayload();
+		if (payloadObject != null) {
+			String payload = payloadObject.toString();
+			entity = new StringEntity(payload, ContentType.APPLICATION_JSON);
+		}
+
+		Response response = null;
+
+		Map<String, String> params = new HashMap<>();
+		try {
+			response = this.getLowLevelClient().performRequest(chRequest.getRequestMethod(), chRequest.getRequestURI(),
+					params, entity);
+		} catch (ResponseException e) {
+			e.printStackTrace();
+			response = e.getResponse();
+			if (response == null) {
+				responseObject.setError(e.getMessage());
+			}
+		}
+		
+		String responseString = EntityUtils.toString(response.getEntity());
+		if (responseString != null) {
+			responseObject = objectMapper.readValue(responseString, ClusterHealthResponse.class);
+			responseObject.setResponseJson(responseString);
+		}
+
+		updateResponse(response, responseObject);
+
+		return responseObject;
+	}
+
 }

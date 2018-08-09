@@ -4,7 +4,9 @@
 package com.opensource.dada.elasticsearch.client;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 
@@ -19,9 +21,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 
+import com.opensource.dada.elasticsearch.request.ClusterHealthRequest;
 import com.opensource.dada.elasticsearch.request.DeleteByQueryRequest;
 import com.opensource.dada.elasticsearch.request.GetAliasesRequest;
 import com.opensource.dada.elasticsearch.request.GetNodesInfoRequest;
+import com.opensource.dada.elasticsearch.response.ClusterHealthResponse;
 import com.opensource.dada.elasticsearch.response.DeleteByQueryResponse;
 import com.opensource.dada.elasticsearch.response.GetAliasesResponse;
 import com.opensource.dada.elasticsearch.response.GetNodesInfoResponse;
@@ -100,6 +104,26 @@ public class CustomRestHighLevelClientTests {
 		assertNotNull(response);
 		assertEquals(200, response.getResponseCode(),"Get nodes request failed");
 		assertNotNull(response.getResponseJson());
+		assertNotNull(response.getNodes());
+		assertFalse(response.getNodes().isEmpty());
+	}
+	
+	@Test
+	public void testGetClusterHealth() {
+		ClusterHealthRequest gaRequest = new ClusterHealthRequest();
+		
+		ClusterHealthResponse response = null;
+		try {
+			response = client.getClusterHealth(gaRequest);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		System.out.println("GetNodesInfoResponse: "+response);
+		assertNotNull(response);
+		assertEquals(200, response.getResponseCode(),"Get cluster health request failed");
+		assertNotNull(response.getResponseJson());
+		assertNotNull(response.getStatus());
+		assertTrue(response.getActiveShards()>0);
 	}
 	
 	@AfterAll

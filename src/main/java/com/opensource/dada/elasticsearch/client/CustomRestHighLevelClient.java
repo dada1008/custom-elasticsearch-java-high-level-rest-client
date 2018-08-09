@@ -24,10 +24,13 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.opensource.dada.elasticsearch.request.ClusterHealthRequest;
 import com.opensource.dada.elasticsearch.request.DeleteByQueryRequest;
 import com.opensource.dada.elasticsearch.request.GetAliasesRequest;
 import com.opensource.dada.elasticsearch.request.GetNodesInfoRequest;
 import com.opensource.dada.elasticsearch.response.AbstractResponse;
+import com.opensource.dada.elasticsearch.response.ClusterHealthResponse;
+import com.opensource.dada.elasticsearch.response.ClusterHealthResponseParser;
 import com.opensource.dada.elasticsearch.response.DeleteByQueryResponse;
 import com.opensource.dada.elasticsearch.response.GetAliasesResponse;
 import com.opensource.dada.elasticsearch.response.GetAliasesResponseParser;
@@ -48,6 +51,7 @@ public class CustomRestHighLevelClient extends RestHighLevelClient {
 		SimpleModule module = new SimpleModule();
 		module.addDeserializer(GetAliasesResponse.class, new GetAliasesResponseParser());
 		module.addDeserializer(GetNodesInfoResponse.class, new GetNodesInfoResponseParser());
+		module.addDeserializer(ClusterHealthResponse.class, new ClusterHealthResponseParser());
 		objectMapper.registerModule(module);
 	}
 	/**
@@ -176,6 +180,32 @@ public class CustomRestHighLevelClient extends RestHighLevelClient {
 		String responseString = EntityUtils.toString(response.getEntity());
 		if (responseString != null) {
 			responseObject = objectMapper.readValue(responseString, GetNodesInfoResponse.class);
+			responseObject.setResponseJson(responseString);
+		}
+
+		updateResponse(response, responseObject);
+
+		return responseObject;
+	}
+	
+	public ClusterHealthResponse getClusterHealth(ClusterHealthRequest chRequest) throws IOException {
+		ClusterHealthResponse responseObject = new ClusterHealthResponse();
+
+		HttpEntity entity = null;
+		Object payloadObject = chRequest.getRequestPayload();
+		if (payloadObject != null) {
+			String payload = payloadObject.toString();
+			entity = new StringEntity(payload, ContentType.APPLICATION_JSON);
+		}
+
+		Response response = null;
+
+		Map<String, String> params = new HashMap<>();
+		response = this.getLowLevelClient().performRequest(chRequest.getRequestMethod(), chRequest.getRequestURI(),
+				params, entity);
+		String responseString = EntityUtils.toString(response.getEntity());
+		if (responseString != null) {
+			responseObject = objectMapper.readValue(responseString, ClusterHealthResponse.class);
 			responseObject.setResponseJson(responseString);
 		}
 

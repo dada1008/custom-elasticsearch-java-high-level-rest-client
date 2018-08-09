@@ -12,7 +12,6 @@ import java.util.Set;
  *
  */
 public class GetAliasesRequest extends AbstractIndexRequest {
-
 	private Set<String> aliases = new LinkedHashSet<String>();
 	
 	/**

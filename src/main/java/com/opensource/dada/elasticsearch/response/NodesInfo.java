@@ -10,7 +10,7 @@ import org.elasticsearch.Version;
 import org.elasticsearch.cluster.node.DiscoveryNode.Role;
 
 /**
- * @author dapatil
+ * @author dadasaheb patil
  *
  */
 public class NodesInfo {

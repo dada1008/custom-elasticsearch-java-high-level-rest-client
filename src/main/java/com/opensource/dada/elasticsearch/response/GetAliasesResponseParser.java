@@ -7,12 +7,9 @@ package com.opensource.dada.elasticsearch.response;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 
-import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
@@ -21,7 +18,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.opensource.dada.elasticsearch.common.JsonParserUtils;
 
 /**
- * @author dapatil
+ * @author dadasaheb patil
  *
  */
 public class GetAliasesResponseParser extends JsonDeserializer<GetAliasesResponse> {
@@ -31,7 +28,7 @@ public class GetAliasesResponseParser extends JsonDeserializer<GetAliasesRespons
 		if (parser.currentToken() == null) {
             parser.nextToken();
         }
-        ensureExpectedToken(JsonToken.START_OBJECT, parser.currentToken(), parser::getTokenLocation);
+		JsonParserUtils.ensureExpectedToken(JsonToken.START_OBJECT, parser.currentToken(), parser::getTokenLocation);
         
 		GetAliasesResponse response = new GetAliasesResponse();
 		Map<String, Set<AliasData>> aliases = new HashMap<>();
@@ -43,7 +40,7 @@ public class GetAliasesResponseParser extends JsonDeserializer<GetAliasesRespons
 
                 if ("status".equals(currentFieldName)) {
                     if ((token = parser.nextToken()) != JsonToken.FIELD_NAME) {
-                        ensureExpectedToken(JsonToken.VALUE_NUMBER_INT, token, parser::getTokenLocation);
+                    	JsonParserUtils.ensureExpectedToken(JsonToken.VALUE_NUMBER_INT, token, parser::getTokenLocation);
                         response.setResponseCode(parser.getIntValue());
                     }
                 } else if ("error".equals(currentFieldName)) {
@@ -53,7 +50,6 @@ public class GetAliasesResponseParser extends JsonDeserializer<GetAliasesRespons
                         response.setError(error);
                     } else if (token == JsonToken.START_OBJECT) {
                         parser.nextToken();
-                        //exception = ElasticsearchException.innerFromXContent(parser, true);
                         String exception = parser.getValueAsString();
                         String error = exception;
                         if(response.getError()!=null) {
@@ -76,20 +72,6 @@ public class GetAliasesResponseParser extends JsonDeserializer<GetAliasesRespons
 		return response;
 	}
 
-	public static void ensureExpectedToken(JsonToken expected, JsonToken actual, Supplier<JsonLocation> location) {
-        if (actual != expected) {
-        	int lineNumber = -1;
-            int columnNumber = -1;
-            JsonLocation jsonLocation = location.get();
-            if (jsonLocation != null) {
-                lineNumber = jsonLocation.getLineNr();
-                columnNumber = jsonLocation.getColumnNr();
-            }
-            String message = "Failed to parse object: expecting token of type [%s] but found [%s]; line number [%s], column number [%s].";
-            throw new RuntimeException(String.format(Locale.ROOT, message, expected, actual, lineNumber, columnNumber));
-        }
-    }
-	
 	private static Set<AliasData> parseAliases(JsonParser parser) throws IOException {
         Set<AliasData> aliases = new HashSet<>();
         JsonToken token;

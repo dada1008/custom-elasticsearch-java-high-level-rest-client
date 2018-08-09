@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.opensource.dada.elasticsearch.common.JsonParserUtils;
 
 /**
- * @author dapatil
+ * @author dadasaheb patil
  *
  */
 public class GetNodesInfoResponseParser extends JsonDeserializer<GetNodesInfoResponse> {

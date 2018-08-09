@@ -3,7 +3,6 @@
  */
 package com.opensource.dada.elasticsearch.request;
 
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -18,7 +17,6 @@ public abstract class AbstractRequest implements BaseRequest {
 	private Object requestPayload;
 	private Set<String> cleanApiParameters = new LinkedHashSet<>();
 	private Map<String,Object> parameters = new LinkedHashMap<>();
-
 	/**
 	 * 
 	 */
@@ -36,7 +34,6 @@ public abstract class AbstractRequest implements BaseRequest {
 	public boolean removeCleanApiParameter(String param) {
         return this.cleanApiParameters.remove(param);
     }
-
     public void setParameter(String paramKey, Object paramValue) {
     	this.parameters.put(paramKey, paramValue);
     }

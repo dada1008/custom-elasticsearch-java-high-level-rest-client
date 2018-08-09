@@ -8,7 +8,7 @@ import java.util.Set;
 import org.elasticsearch.common.compress.CompressedXContent;
 
 /**
- * @author dapatil
+ * @author dadasaheb patil
  *
  */
 public class AliasData {

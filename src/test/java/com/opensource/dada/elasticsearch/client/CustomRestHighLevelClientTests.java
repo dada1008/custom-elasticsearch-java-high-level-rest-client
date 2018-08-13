@@ -112,7 +112,8 @@ public class CustomRestHighLevelClientTests {
 	@Test
 	public void testGetClusterHealth() {
 		ClusterHealthRequest chRequest = new ClusterHealthRequest();
-		chRequest.waitForGreenStatus().timeout(TimeValue.timeValueMillis(1000));
+		chRequest.waitForYellowStatus().timeout(TimeValue.timeValueMillis(1000));
+		
 		ClusterHealthResponse response = null;
 		try {
 			response = client.getClusterHealth(chRequest);

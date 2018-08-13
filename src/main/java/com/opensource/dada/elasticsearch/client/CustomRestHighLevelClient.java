@@ -21,40 +21,36 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.CheckedConsumer;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry.Entry;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.opensource.dada.elasticsearch.common.JsonParserUtils;
 import com.opensource.dada.elasticsearch.request.ClusterHealthRequest;
+import com.opensource.dada.elasticsearch.request.CreateSnapshotRequest;
 import com.opensource.dada.elasticsearch.request.DeleteByQueryRequest;
+import com.opensource.dada.elasticsearch.request.DeleteRepositoryRequest;
+import com.opensource.dada.elasticsearch.request.DeleteSnapshotRequest;
 import com.opensource.dada.elasticsearch.request.GetAliasesRequest;
+import com.opensource.dada.elasticsearch.request.GetMappingsRequest;
 import com.opensource.dada.elasticsearch.request.GetNodesInfoRequest;
+import com.opensource.dada.elasticsearch.request.GetRepositoriesRequest;
+import com.opensource.dada.elasticsearch.request.GetSnapshotsRequest;
+import com.opensource.dada.elasticsearch.request.PutRepositoryRequest;
 import com.opensource.dada.elasticsearch.response.AbstractResponse;
 import com.opensource.dada.elasticsearch.response.ClusterHealthResponse;
-import com.opensource.dada.elasticsearch.response.ClusterHealthResponseParser;
+import com.opensource.dada.elasticsearch.response.CreateSnapshotResponse;
 import com.opensource.dada.elasticsearch.response.DeleteByQueryResponse;
+import com.opensource.dada.elasticsearch.response.DeleteRepositoryResponse;
+import com.opensource.dada.elasticsearch.response.DeleteSnapshotResponse;
 import com.opensource.dada.elasticsearch.response.GetAliasesResponse;
-import com.opensource.dada.elasticsearch.response.GetAliasesResponseParser;
+import com.opensource.dada.elasticsearch.response.GetMappingsResponse;
 import com.opensource.dada.elasticsearch.response.GetNodesInfoResponse;
-import com.opensource.dada.elasticsearch.response.GetNodesInfoResponseParser;
+import com.opensource.dada.elasticsearch.response.GetRepositoriesResponse;
+import com.opensource.dada.elasticsearch.response.GetSnapshotsResponse;
+import com.opensource.dada.elasticsearch.response.PutRepositoryResponse;
 
 /**
  * @author dadasaheb patil
  *
  */
 public class CustomRestHighLevelClient extends RestHighLevelClient {
-
-	public static ObjectMapper objectMapper = new ObjectMapper();
-	static {
-		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-		objectMapper.setSerializationInclusion(Include.NON_NULL);
-		objectMapper.setSerializationInclusion(Include.NON_EMPTY);
-		SimpleModule module = new SimpleModule();
-		module.addDeserializer(GetAliasesResponse.class, new GetAliasesResponseParser());
-		module.addDeserializer(GetNodesInfoResponse.class, new GetNodesInfoResponseParser());
-		module.addDeserializer(ClusterHealthResponse.class, new ClusterHealthResponseParser());
-		objectMapper.registerModule(module);
-	}
 
 	/**
 	 * @param restClientBuilder
@@ -105,7 +101,7 @@ public class CustomRestHighLevelClient extends RestHighLevelClient {
 			// Map<String, Object> map =
 			// XContentHelper.convertToMap(XContentType.JSON.xContent(), responseString,
 			// true);
-			responseObject = objectMapper.readValue(responseString, DeleteByQueryResponse.class);
+			responseObject = JsonParserUtils.objectMapper.readValue(responseString, DeleteByQueryResponse.class);
 			responseObject.setResponseJson(responseString);
 		}
 
@@ -150,7 +146,7 @@ public class CustomRestHighLevelClient extends RestHighLevelClient {
 				params, entity);
 		String responseString = EntityUtils.toString(response.getEntity());
 		if (responseString != null) {
-			responseObject = objectMapper.readValue(responseString, GetAliasesResponse.class);
+			responseObject = JsonParserUtils.objectMapper.readValue(responseString, GetAliasesResponse.class);
 			responseObject.setResponseJson(responseString);
 		}
 
@@ -176,7 +172,7 @@ public class CustomRestHighLevelClient extends RestHighLevelClient {
 				params, entity);
 		String responseString = EntityUtils.toString(response.getEntity());
 		if (responseString != null) {
-			responseObject = objectMapper.readValue(responseString, GetNodesInfoResponse.class);
+			responseObject = JsonParserUtils.objectMapper.readValue(responseString, GetNodesInfoResponse.class);
 			responseObject.setResponseJson(responseString);
 		}
 
@@ -211,7 +207,238 @@ public class CustomRestHighLevelClient extends RestHighLevelClient {
 		
 		String responseString = EntityUtils.toString(response.getEntity());
 		if (responseString != null) {
-			responseObject = objectMapper.readValue(responseString, ClusterHealthResponse.class);
+			responseObject = JsonParserUtils.objectMapper.readValue(responseString, ClusterHealthResponse.class);
+			responseObject.setResponseJson(responseString);
+		}
+
+		updateResponse(response, responseObject);
+
+		return responseObject;
+	}
+	
+	public GetMappingsResponse getMappings(GetMappingsRequest gmRequest) throws IOException {
+		GetMappingsResponse responseObject = new GetMappingsResponse();
+
+		HttpEntity entity = null;
+
+		Response response = null;
+
+		Map<String, String> params = new HashMap<>();
+		response = this.getLowLevelClient().performRequest(gmRequest.getRequestMethod(), gmRequest.getRequestURI(),
+				params, entity);
+		String responseString = EntityUtils.toString(response.getEntity());
+		if (responseString != null) {
+			responseObject = JsonParserUtils.objectMapper.readValue(responseString, GetMappingsResponse.class);
+			responseObject.setResponseJson(responseString);
+		}
+
+		updateResponse(response, responseObject);
+
+		return responseObject;
+	}
+	
+	public PutRepositoryResponse createRepository(PutRepositoryRequest prRequest) throws IOException {
+		PutRepositoryResponse responseObject = new PutRepositoryResponse();
+
+		HttpEntity entity = null;
+		Object payloadObject = prRequest.getRequestPayload();
+		if (payloadObject != null) {
+			String payload = payloadObject.toString();
+			entity = new StringEntity(payload, ContentType.APPLICATION_JSON);
+		}
+
+		Response response = null;
+
+		Map<String, String> params = new HashMap<>();
+		try {
+			response = this.getLowLevelClient().performRequest(prRequest.getRequestMethod(), prRequest.getRequestURI(),
+					params, entity);
+		} catch (ResponseException e) {
+			e.printStackTrace();
+			response = e.getResponse();
+			if (response == null) {
+				responseObject.setError(e.getMessage());
+			}
+		}
+		
+		String responseString = EntityUtils.toString(response.getEntity());
+		if (responseString != null) {
+			responseObject = JsonParserUtils.objectMapper.readValue(responseString, PutRepositoryResponse.class);
+			responseObject.setResponseJson(responseString);
+		}
+
+		updateResponse(response, responseObject);
+
+		return responseObject;
+	}
+	
+	public GetRepositoriesResponse getRepository(GetRepositoriesRequest grRequest) throws IOException {
+		GetRepositoriesResponse responseObject = new GetRepositoriesResponse();
+
+		HttpEntity entity = null;
+		Object payloadObject = grRequest.getRequestPayload();
+		if (payloadObject != null) {
+			String payload = payloadObject.toString();
+			entity = new StringEntity(payload, ContentType.APPLICATION_JSON);
+		}
+
+		Response response = null;
+
+		Map<String, String> params = new HashMap<>();
+		try {
+			response = this.getLowLevelClient().performRequest(grRequest.getRequestMethod(), grRequest.getRequestURI(),
+					params, entity);
+		} catch (ResponseException e) {
+			e.printStackTrace();
+			response = e.getResponse();
+			if (response == null) {
+				responseObject.setError(e.getMessage());
+			}
+		}
+		
+		String responseString = EntityUtils.toString(response.getEntity());
+		if (responseString != null) {
+			responseObject = JsonParserUtils.objectMapper.readValue(responseString, GetRepositoriesResponse.class);
+			responseObject.setResponseJson(responseString);
+		}
+
+		updateResponse(response, responseObject);
+
+		return responseObject;
+	}
+	
+	public GetSnapshotsResponse getSnapshots(GetSnapshotsRequest grRequest) throws IOException {
+		GetSnapshotsResponse responseObject = new GetSnapshotsResponse();
+
+		HttpEntity entity = null;
+		Object payloadObject = grRequest.getRequestPayload();
+		if (payloadObject != null) {
+			String payload = payloadObject.toString();
+			entity = new StringEntity(payload, ContentType.APPLICATION_JSON);
+		}
+
+		Response response = null;
+
+		Map<String, String> params = new HashMap<>();
+		try {
+			response = this.getLowLevelClient().performRequest(grRequest.getRequestMethod(), grRequest.getRequestURI(),
+					params, entity);
+		} catch (ResponseException e) {
+			e.printStackTrace();
+			response = e.getResponse();
+			if (response == null) {
+				responseObject.setError(e.getMessage());
+			}
+		}
+		
+		String responseString = EntityUtils.toString(response.getEntity());
+		if (responseString != null) {
+			responseObject = JsonParserUtils.objectMapper.readValue(responseString, GetSnapshotsResponse.class);
+			responseObject.setResponseJson(responseString);
+		}
+
+		updateResponse(response, responseObject);
+
+		return responseObject;
+	}
+	
+	public CreateSnapshotResponse createSnapshot(CreateSnapshotRequest grRequest) throws IOException {
+		CreateSnapshotResponse responseObject = new CreateSnapshotResponse();
+
+		HttpEntity entity = null;
+		Object payloadObject = grRequest.getRequestPayload();
+		if (payloadObject != null) {
+			String payload = payloadObject.toString();
+			entity = new StringEntity(payload, ContentType.APPLICATION_JSON);
+		}
+
+		Response response = null;
+
+		Map<String, String> params = new HashMap<>();
+		try {
+			response = this.getLowLevelClient().performRequest(grRequest.getRequestMethod(), grRequest.getRequestURI(),
+					params, entity);
+		} catch (ResponseException e) {
+			e.printStackTrace();
+			response = e.getResponse();
+			if (response == null) {
+				responseObject.setError(e.getMessage());
+			}
+		}
+		
+		String responseString = EntityUtils.toString(response.getEntity());
+		if (responseString != null) {
+			responseObject = JsonParserUtils.objectMapper.readValue(responseString, CreateSnapshotResponse.class);
+			responseObject.setResponseJson(responseString);
+		}
+
+		updateResponse(response, responseObject);
+
+		return responseObject;
+	}
+	
+	public DeleteSnapshotResponse deleteSnapshot(DeleteSnapshotRequest grRequest) throws IOException {
+		DeleteSnapshotResponse responseObject = new DeleteSnapshotResponse();
+
+		HttpEntity entity = null;
+		Object payloadObject = grRequest.getRequestPayload();
+		if (payloadObject != null) {
+			String payload = payloadObject.toString();
+			entity = new StringEntity(payload, ContentType.APPLICATION_JSON);
+		}
+
+		Response response = null;
+
+		Map<String, String> params = new HashMap<>();
+		try {
+			response = this.getLowLevelClient().performRequest(grRequest.getRequestMethod(), grRequest.getRequestURI(),
+					params, entity);
+		} catch (ResponseException e) {
+			e.printStackTrace();
+			response = e.getResponse();
+			if (response == null) {
+				responseObject.setError(e.getMessage());
+			}
+		}
+		
+		String responseString = EntityUtils.toString(response.getEntity());
+		if (responseString != null) {
+			responseObject = JsonParserUtils.objectMapper.readValue(responseString, DeleteSnapshotResponse.class);
+			responseObject.setResponseJson(responseString);
+		}
+
+		updateResponse(response, responseObject);
+
+		return responseObject;
+	}
+	
+	public DeleteRepositoryResponse deleteRepository(DeleteRepositoryRequest grRequest) throws IOException {
+		DeleteRepositoryResponse responseObject = new DeleteRepositoryResponse();
+
+		HttpEntity entity = null;
+		Object payloadObject = grRequest.getRequestPayload();
+		if (payloadObject != null) {
+			String payload = payloadObject.toString();
+			entity = new StringEntity(payload, ContentType.APPLICATION_JSON);
+		}
+
+		Response response = null;
+
+		Map<String, String> params = new HashMap<>();
+		try {
+			response = this.getLowLevelClient().performRequest(grRequest.getRequestMethod(), grRequest.getRequestURI(),
+					params, entity);
+		} catch (ResponseException e) {
+			e.printStackTrace();
+			response = e.getResponse();
+			if (response == null) {
+				responseObject.setError(e.getMessage());
+			}
+		}
+		
+		String responseString = EntityUtils.toString(response.getEntity());
+		if (responseString != null) {
+			responseObject = JsonParserUtils.objectMapper.readValue(responseString, DeleteRepositoryResponse.class);
 			responseObject.setResponseJson(responseString);
 		}
 

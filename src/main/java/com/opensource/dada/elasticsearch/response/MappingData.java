@@ -9,7 +9,7 @@ import java.util.Set;
  * @author dadasaheb patil
  *
  */
-public class AliasData {
+public class MappingData {
 
 	private String alias;
 
@@ -24,7 +24,7 @@ public class AliasData {
 	/**
 	 * 
 	 */
-	public AliasData() {
+	public MappingData() {
 	}
 
 	/**

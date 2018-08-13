@@ -30,7 +30,9 @@ public class ClusterHealthRequest extends AbstractIndexRequest {
 	}
 	
 	public ClusterHealthRequest timeout(TimeValue timeout) {
-		setParameter("timeout", timeout.getMillis()+"ms");
+		if(timeout!=null) {
+    		setParameter("timeout", timeout.getMillis()+"ms");
+    	}
         return this;
     }
 
@@ -47,6 +49,21 @@ public class ClusterHealthRequest extends AbstractIndexRequest {
         return waitForStatus(ClusterHealthStatus.YELLOW);
     }
 
+    public ClusterHealthRequest level(Level level) {
+    	if(level!=null) {
+    		setParameter("level", level.getId());
+    	}
+        return this;
+    }
+    
+    public ClusterHealthRequest setLevelToIndices() {
+    	return level(Level.INDICES);
+    }
+    
+    public ClusterHealthRequest setLevelToShards() {
+    	return level(Level.SHARDS);
+    }
+    
 	@Override
 	public final String getRequestURI() {
 		StringBuilder sb = new StringBuilder(getRelativeURI());
@@ -60,4 +77,18 @@ public class ClusterHealthRequest extends AbstractIndexRequest {
 		return sb.toString();
 	}
 
+	
+	public enum Level {
+        CLUSTER("cluster"), INDICES("indices"), SHARDS("shards");
+
+        private final String id;
+
+        Level(String id) {
+            this.id = id;
+        }
+
+        public String getId() {
+            return id;
+        }
+    }
 }

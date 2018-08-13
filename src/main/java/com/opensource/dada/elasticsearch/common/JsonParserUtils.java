@@ -11,11 +11,23 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import org.elasticsearch.common.xcontent.XContentParser;
-
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.opensource.dada.elasticsearch.response.ClusterHealthResponse;
+import com.opensource.dada.elasticsearch.response.ClusterHealthResponseParser;
+import com.opensource.dada.elasticsearch.response.GetAliasesResponse;
+import com.opensource.dada.elasticsearch.response.GetAliasesResponseParser;
+import com.opensource.dada.elasticsearch.response.GetMappingsResponse;
+import com.opensource.dada.elasticsearch.response.GetMappingsResponseParser;
+import com.opensource.dada.elasticsearch.response.GetNodesInfoResponse;
+import com.opensource.dada.elasticsearch.response.GetNodesInfoResponseParser;
+import com.opensource.dada.elasticsearch.response.GetRepositoriesResponse;
+import com.opensource.dada.elasticsearch.response.GetRepositoriesResponseParser;
 
 /**
  * @author dadasaheb patil
@@ -23,6 +35,20 @@ import com.fasterxml.jackson.core.JsonToken;
  */
 public class JsonParserUtils {
 
+	public static ObjectMapper objectMapper = new ObjectMapper();
+	static {
+		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		objectMapper.setSerializationInclusion(Include.NON_NULL);
+		objectMapper.setSerializationInclusion(Include.NON_EMPTY);
+		SimpleModule module = new SimpleModule();
+		module.addDeserializer(GetAliasesResponse.class, new GetAliasesResponseParser());
+		module.addDeserializer(GetNodesInfoResponse.class, new GetNodesInfoResponseParser());
+		module.addDeserializer(ClusterHealthResponse.class, new ClusterHealthResponseParser());
+		module.addDeserializer(GetRepositoriesResponse.class, new GetRepositoriesResponseParser());
+		module.addDeserializer(GetMappingsResponse.class, new GetMappingsResponseParser());
+		objectMapper.registerModule(module);
+	}
+	
 	/**
 	 * 
 	 */
@@ -95,7 +121,7 @@ public class JsonParserUtils {
         } else {
         	JsonLocation location = parser.getTokenLocation();
             throw new RuntimeException("Failed to parse list:  expecting "
-                    + XContentParser.Token.START_ARRAY + " but got " + token+", location line:"+location.getLineNr()+" column:"+location.getColumnNr());
+                    + JsonToken.START_ARRAY + " but got " + token+", location line:"+location.getLineNr()+" column:"+location.getColumnNr());
         }
 
         List<Object> list = new ArrayList<>();
@@ -104,6 +130,13 @@ public class JsonParserUtils {
         }
         return list;
     }
+	/**
+     * @throws ParsingException with a "unknown token found" reason
+     */
+    public static void throwUnknownToken(JsonToken token, JsonLocation location) {
+        throw new RuntimeException("Failed to parse object: unexpected token ["+token+"] found, location line:"+location.getLineNr()+" column:"+location.getColumnNr());
+    }
+    
 	
 	interface MapFactory {
         Map<String, Object> newMap();

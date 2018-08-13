@@ -4,7 +4,6 @@
 package com.opensource.dada.elasticsearch.response;
 
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author dadasaheb patil

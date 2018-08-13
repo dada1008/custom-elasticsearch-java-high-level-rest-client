@@ -2,20 +2,25 @@ package com.opensource.dada.elasticsearch.client;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static com.opensource.dada.elasticsearch.common.JsonParserUtils.objectMapper;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.elasticsearch.cluster.metadata.RepositoryMetaData;
+import org.elasticsearch.common.settings.Settings;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 
+import com.opensource.dada.elasticsearch.request.PutRepositoryRequest;
 import com.opensource.dada.elasticsearch.response.AliasData;
 import com.opensource.dada.elasticsearch.response.GetAliasesResponse;
 import com.opensource.dada.elasticsearch.response.GetNodesInfoResponse;
+import com.opensource.dada.elasticsearch.response.GetRepositoriesResponse;
 import com.opensource.dada.elasticsearch.response.NodesInfo;
 
 @RunWith(JUnitPlatform.class)
@@ -242,11 +247,20 @@ public class TempTests {
 			"  }" + 
 			"}";
 	
+	String getRepositoryResponse = "{" + 
+			"\"my_backup\": {" + 
+			"\"type\": \"fs\"," + 
+			"\"settings\": {" + 
+			"\"location\": \"C:/P4V/ES/backup\"" + 
+			"}" + 
+			"}" + 
+			"}";
+	
 	@Disabled
 	public void testJsonNodeIteration() {
 		Map<String, Map> rootNode = null;
 		try {
-			rootNode = CustomRestHighLevelClient.objectMapper.readValue(aliasResponse, Map.class);
+			rootNode = objectMapper.readValue(aliasResponse, Map.class);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -269,7 +283,7 @@ public class TempTests {
 	public void testGetAliasResponseParser() {
 		GetAliasesResponse response = null;
 		try {
-			response = CustomRestHighLevelClient.objectMapper.readValue(aliasResponse2, GetAliasesResponse.class);
+			response = objectMapper.readValue(aliasResponse2, GetAliasesResponse.class);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -285,7 +299,7 @@ public class TempTests {
 	public void testGetNodesInfosResponseParser() {
 		GetNodesInfoResponse response = null;
 		try {
-			response = CustomRestHighLevelClient.objectMapper.readValue(nodesResponse, GetNodesInfoResponse.class);
+			response = objectMapper.readValue(nodesResponse, GetNodesInfoResponse.class);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -295,5 +309,31 @@ public class TempTests {
 		assertTrue(nodesInfoMap != null && !nodesInfoMap.isEmpty());
 		NodesInfo nodesinfo = nodesInfoMap.values().iterator().next();
 		assertTrue(nodesinfo != null && nodesinfo.getNodeName()!=null);
+	}
+	
+	@Disabled
+	public void testPutRepositoryRequest() {
+		PutRepositoryRequest request = new PutRepositoryRequest();
+		request.setName("testRepo");
+		request.setType("fs");
+		Settings settings = Settings.builder().put("location", "location").put("compress", true).build();
+		request.setSettings(settings);
+		System.out.println("Payload:"+request.getRequestPayload());
+	}
+	
+	@Disabled
+	public void testGetRepositoriesResponseParser() {
+		GetRepositoriesResponse response = null;
+		try {
+			response = objectMapper.readValue(getRepositoryResponse, GetRepositoriesResponse.class);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		assertNotNull(response);
+		Map<String, RepositoryMetaData> repositoryMap = response.getRepositories();
+		assertTrue(repositoryMap != null && !repositoryMap.isEmpty());
+		RepositoryMetaData repositoryMetaData = repositoryMap.values().iterator().next();
+		assertTrue(repositoryMetaData != null && repositoryMetaData.name()!=null);
 	}
 }

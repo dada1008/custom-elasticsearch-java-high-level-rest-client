@@ -4,6 +4,7 @@
 package com.opensource.dada.elasticsearch.client;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,8 @@ import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.CheckedConsumer;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry.Entry;
+import org.elasticsearch.common.xcontent.XContentHelper;
+import org.elasticsearch.common.xcontent.XContentType;
 
 import com.opensource.dada.elasticsearch.common.JsonParserUtils;
 import com.opensource.dada.elasticsearch.request.ClusterHealthRequest;
@@ -235,6 +238,29 @@ public class CustomRestHighLevelClient extends RestHighLevelClient {
 		updateResponse(response, responseObject);
 
 		return responseObject;
+	}
+	
+	//This method created temparary until we do json parsing changes for GetMappingsResponse for method getMappings
+	public boolean isMappingExists(GetMappingsRequest gmRequest) throws IOException {
+		boolean isMappingExists = false;
+
+		Response response = null;
+		try {
+			String indexName = gmRequest.getJoinedIndices();
+			String mappingType = gmRequest.getJoinedTypes();
+			response = this.getLowLevelClient().performRequest(gmRequest.getRequestMethod(), indexName + "/_mapping/" + mappingType);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+
+		try (InputStream is = response.getEntity().getContent()) {
+			Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
+			isMappingExists = !map.containsKey("error");
+		} catch (UnsupportedOperationException | IOException e) {
+			e.printStackTrace();
+		}
+		
+		return isMappingExists;
 	}
 	
 	public PutRepositoryResponse createRepository(PutRepositoryRequest prRequest) throws IOException {

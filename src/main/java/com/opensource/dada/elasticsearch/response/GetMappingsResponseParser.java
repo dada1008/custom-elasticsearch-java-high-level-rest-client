@@ -70,15 +70,15 @@ public class GetMappingsResponseParser extends JsonDeserializer<GetMappingsRespo
 				} else if ("cluster_name".equals(currentFieldName)) {
 					if ((token = parser.nextToken()) != JsonToken.FIELD_NAME) {
 						JsonParserUtils.ensureExpectedToken(JsonToken.VALUE_STRING, token, parser::getTokenLocation);
-						response.setClusterName(parser.getText());
+						//response.setClusterName(parser.getText());
 					}
 				} else if ("_nodes".equals(currentFieldName)) {
 					if (parser.nextToken() == JsonToken.START_OBJECT) {
-						parseNodes(parser, response);
+						//parseNodes(parser, response);
 					}
 				} else if ("nodes".equals(currentFieldName)) {
 					Map<String, NodesInfo> nodesInfos = parseNodesInfos(parser);
-					response.setNodes(nodesInfos);
+					//response.setNodes(nodesInfos);
 				}
 			}
 		}

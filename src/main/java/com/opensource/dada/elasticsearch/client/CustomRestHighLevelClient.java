@@ -145,8 +145,16 @@ public class CustomRestHighLevelClient extends RestHighLevelClient {
 		Response response = null;
 
 		Map<String, String> params = new HashMap<>();
+		try {
 		response = this.getLowLevelClient().performRequest(gaRequest.getRequestMethod(), gaRequest.getRequestURI(),
 				params, entity);
+		} catch (ResponseException e) {
+			e.printStackTrace();
+			response = e.getResponse();
+			if (response == null) {
+				responseObject.setError(e.getMessage());
+			}
+		}
 		String responseString = EntityUtils.toString(response.getEntity());
 		if (responseString != null) {
 			responseObject = JsonParserUtils.objectMapper.readValue(responseString, GetAliasesResponse.class);
@@ -171,8 +179,16 @@ public class CustomRestHighLevelClient extends RestHighLevelClient {
 		Response response = null;
 
 		Map<String, String> params = new HashMap<>();
+		try {
 		response = this.getLowLevelClient().performRequest(gniRequest.getRequestMethod(), gniRequest.getRequestURI(),
 				params, entity);
+		} catch (ResponseException e) {
+			e.printStackTrace();
+			response = e.getResponse();
+			if (response == null) {
+				responseObject.setError(e.getMessage());
+			}
+		}
 		String responseString = EntityUtils.toString(response.getEntity());
 		if (responseString != null) {
 			responseObject = JsonParserUtils.objectMapper.readValue(responseString, GetNodesInfoResponse.class);
@@ -227,8 +243,16 @@ public class CustomRestHighLevelClient extends RestHighLevelClient {
 		Response response = null;
 
 		Map<String, String> params = new HashMap<>();
+		try {
 		response = this.getLowLevelClient().performRequest(gmRequest.getRequestMethod(), gmRequest.getRequestURI(),
 				params, entity);
+		} catch (ResponseException e) {
+			e.printStackTrace();
+			response = e.getResponse();
+			if (response == null) {
+				responseObject.setError(e.getMessage());
+			}
+		}
 		String responseString = EntityUtils.toString(response.getEntity());
 		if (responseString != null) {
 			responseObject = JsonParserUtils.objectMapper.readValue(responseString, GetMappingsResponse.class);
@@ -241,7 +265,7 @@ public class CustomRestHighLevelClient extends RestHighLevelClient {
 	}
 	
 	//This method created temparary until we do json parsing changes for GetMappingsResponse for method getMappings
-	public boolean isMappingExists(GetMappingsRequest gmRequest) throws IOException {
+	public boolean isMappingExists(GetMappingsRequest gmRequest) {
 		boolean isMappingExists = false;
 
 		Response response = null;
@@ -252,14 +276,14 @@ public class CustomRestHighLevelClient extends RestHighLevelClient {
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-
-		try (InputStream is = response.getEntity().getContent()) {
-			Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
-			isMappingExists = !map.containsKey("error");
-		} catch (UnsupportedOperationException | IOException e) {
-			e.printStackTrace();
+		if(response!=null && response.getEntity()!=null) {
+			try (InputStream is = response.getEntity().getContent()) {
+				Map<String, Object> map = XContentHelper.convertToMap(XContentType.JSON.xContent(), is, true);
+				isMappingExists = !map.containsKey("error");
+			} catch (UnsupportedOperationException | IOException e) {
+				e.printStackTrace();
 		}
-		
+		}
 		return isMappingExists;
 	}
 	
